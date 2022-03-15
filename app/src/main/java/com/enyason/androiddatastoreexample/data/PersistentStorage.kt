@@ -5,6 +5,7 @@ import androidx.datastore.preferences.core.Preferences
 import androidx.datastore.preferences.core.edit
 import com.google.gson.Gson
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.map
 import java.lang.reflect.Type
@@ -18,30 +19,24 @@ class PersistentStorage<T> constructor(
 
     override fun insert(data: T): Flow<Int> {
         return flow {
-            getAll().map { cachedData ->
-                val cachedDataClone = cachedData.toMutableList()
-                cachedDataClone.add(data)
-
-                dataStore.edit {
-                    val jsonString = gson.toJson(cachedDataClone, type)
-                    it[preferenceKey] = jsonString
-                    emit(OPERATION_SUCCESS)
-                }
+            val cachedDataClone = getAll().first().toMutableList()
+            cachedDataClone.add(data)
+            dataStore.edit {
+                val jsonString = gson.toJson(cachedDataClone, type)
+                it[preferenceKey] = jsonString
+                emit(OPERATION_SUCCESS)
             }
         }
     }
 
     override fun insert(data: List<T>): Flow<Int> {
         return flow {
-            getAll().map { cachedData ->
-                val cachedDataClone = cachedData.toMutableList()
-                cachedDataClone.addAll(data)
-
-                dataStore.edit {
-                    val jsonString = gson.toJson(cachedDataClone, type)
-                    it[preferenceKey] = jsonString
-                    emit(OPERATION_SUCCESS)
-                }
+            val cachedDataClone = getAll().first().toMutableList()
+            cachedDataClone.addAll(data)
+            dataStore.edit {
+                val jsonString = gson.toJson(cachedDataClone, type)
+                it[preferenceKey] = jsonString
+                emit(OPERATION_SUCCESS)
             }
         }
     }
@@ -64,8 +59,9 @@ class PersistentStorage<T> constructor(
     }
 
     override fun get(where: (T) -> Boolean): Flow<T> {
-        return getAll().map { cachedData ->
-            cachedData.first(where)
+        return flow {
+            val data = getAll().first().first(where)
+            emit(data)
         }
     }
 

@@ -14,7 +14,7 @@ class DataSource {
 
     fun getConfigs(): Flow<List<Config>> {
         return flow {
-            delay(1500) // mock network delay
+            delay(500) // mock network delay
             emit(_configs)
         }
     }
